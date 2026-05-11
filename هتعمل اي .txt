@@ -1,0 +1,28 @@
+اولا انت هتمسح اي ملف غريب .json موجود في الفولدر ده 
+E:\6_term\Web\Online_Book_Review_Application-main
+ثانيا 
+هترفعه علي Cursor 
+وتقوله 
+
+
+اعمل todo list علشان تنفذ المطلوب ده:
+انا عاوز ينفع كل userيضيق صوره شخصيه له -
+- وعاوز token تكون شغاله علطول ميحصلش expired token
+-ايضا عاوز لما اجي انشر كتاب ياخد من ISBN,Booktitle,bookauther 
+ايضا عاوزه ياخد الكتاب اللي هنشره ويكون اما يكتبه ك text داخل الويب سايت اما يعمل browse وياخد الكتاب as a pdf from my computer
+-عاوز Front End must be responsove for all devices and also must be 
+The frontend UI must have strong visual consistency across all pages.
+
+Requirements:
+- Unified color palette
+- Consistent spacing system
+- Consistent typography hierarchy
+- Reusable component styles
+- Consistent border radius and shadows
+- Smooth and unified animations
+- Matching card/button/input styles
+- Proper alignment and layout rhythm
+- Responsive consistency across devices
+- Shared design language across the entire application
+
+The UI should feel like a professionally designed product, not disconnected pages.
