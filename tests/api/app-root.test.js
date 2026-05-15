@@ -20,4 +20,11 @@ describe("app root", () => {
     const res = await request(app).get("/");
     expect(res.status).toBe(200);
   });
+
+  it("GET /api-docs/ returns swagger ui", async () => {
+    const app = await makeApp();
+    const res = await request(app).get("/api-docs/");
+    expect(res.status).toBe(200);
+    expect(res.text).toContain("Swagger UI");
+  });
 });
