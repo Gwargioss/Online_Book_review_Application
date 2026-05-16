@@ -13,5 +13,6 @@ export const loginSchema = z.object({
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().email().max(120),
-  profilePicture: z.string().trim().url().max(500)
+  profilePicture: z.union([z.string().trim().url().max(500), z.literal("")]).optional(),
+  favoriteGenre: z.union([z.string().trim().max(80), z.literal("")]).optional()
 });

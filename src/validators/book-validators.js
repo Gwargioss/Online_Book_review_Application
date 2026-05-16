@@ -8,7 +8,8 @@ export const listBooksQuery = z.object({
 export const publishBookSchema = z.object({
   ISBN: z.string().min(2).max(32),
   title: z.string().min(2).max(180),
-  author: z.string().min(2).max(120)
+  author: z.string().min(2).max(120),
+  content: z.string().optional().default("")
 });
 
 export const searchByIsbnSchema = z.object({

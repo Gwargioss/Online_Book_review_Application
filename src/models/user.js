@@ -30,6 +30,12 @@ const userSchema = new mongoose.Schema(
       maxlength: 500,
       default: ""
     },
+    favoriteGenre: {
+      type: String,
+      trim: true,
+      maxlength: 80,
+      default: ""
+    },
     passwordHash: {
       type: String,
       required: true,
@@ -43,7 +49,7 @@ const userSchema = new mongoose.Schema(
   {
     timestamps: true,
     toJSON: {
-      virtuals: true,
+      virtuals: true, //
       versionKey: false,
       transform: (doc, ret) => {
         ret.id = ret._id?.toString();

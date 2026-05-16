@@ -1,7 +1,11 @@
 import Book from "../models/book.js";
 
-export async function createBook({ ISBN, title, author }) {
-  return Book.create({ ISBN, title, author });
+export async function createBook({ ISBN, title, author, content = "" }) {
+  return Book.create({ ISBN, title, author, content });
+}
+
+export async function updateBookContent(bookId, content) {
+  return Book.findByIdAndUpdate(bookId, { $set: { content } }, { new: true }).exec();
 }
 
 export async function findBooksPaginated({ page, limit }) {
@@ -29,6 +33,10 @@ export async function findBooksByTitle(title) {
 
 export async function findBooksByAuthor(author) {
   return Book.find({ author: safeRegex(author) }).sort({ createdAt: -1 }).exec();
+}
+
+export async function countBooks() {
+  return Book.countDocuments().exec();
 }
 
 export async function findBookById(id) {

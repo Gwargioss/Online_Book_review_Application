@@ -2,6 +2,7 @@ import { AppError } from "../utils/app-error.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../utils/jwt.js";
 import * as userRepo from "../repositories/user-repository.js";
+import * as bookRepo from "../repositories/book-repository.js";
 
 export async function register({ username, password }) {
   const existing = await userRepo.findByUsername(username);
@@ -49,25 +50,30 @@ export async function logout(userId) {
 }
 
 export async function me(userId) {
-  const user = await userRepo.findById(userId);
+  const [user, bookCount] = await Promise.all([userRepo.findById(userId), bookRepo.countBooks()]);
   if (!user) throw new AppError({ code: "UNAUTHORIZED", status: 401, message: "User not found." });
   return {
     id: user.id,
     username: user.username,
     name: user.name || "",
     email: user.email || "",
-    profilePicture: user.profilePicture || ""
+    profilePicture: user.profilePicture || "",
+    favoriteGenre: user.favoriteGenre || "",
+    bookCount: bookCount || 0
   };
 }
 
 export async function updateProfile(userId, payload) {
   const user = await userRepo.updateProfile(userId, payload);
   if (!user) throw new AppError({ code: "UNAUTHORIZED", status: 401, message: "User not found." });
+  const bookCount = await bookRepo.countBooks();
   return {
     id: user.id,
     username: user.username,
     name: user.name || "",
     email: user.email || "",
-    profilePicture: user.profilePicture || ""
+    profilePicture: user.profilePicture || "",
+    favoriteGenre: user.favoriteGenre || "",
+    bookCount: bookCount || 0
   };
 }

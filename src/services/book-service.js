@@ -13,9 +13,9 @@ export async function listBooks({ page = 1, limit = 24 }) {
   };
 }
 
-export async function publishBook({ ISBN, title, author }) {
+export async function publishBook({ ISBN, title, author, content = "" }) {
   try {
-    const book = await bookRepo.createBook({ ISBN, title, author });
+    const book = await bookRepo.createBook({ ISBN, title, author, content });
     return { book };
   } catch (err) {
     if (err?.code === 11000) {
@@ -23,6 +23,12 @@ export async function publishBook({ ISBN, title, author }) {
     }
     throw err;
   }
+}
+
+export async function updateBookContent(bookId, content) {
+  const book = await bookRepo.updateBookContent(bookId, content);
+  if (!book) throw new AppError({ code: "NOT_FOUND", status: 404, message: "Book not found." });
+  return book;
 }
 
 export async function searchByISBN({ ISBN }) {

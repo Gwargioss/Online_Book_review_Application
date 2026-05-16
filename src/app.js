@@ -22,8 +22,8 @@ export function createApp() {
 
   // Limit for text in req Body to protect me from large payloads
   app.use(express.json({ limit: "64kb" }));
+  app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
 
-  
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   // home route

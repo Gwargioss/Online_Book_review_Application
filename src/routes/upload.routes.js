@@ -1,7 +1,9 @@
 import express from "express";
+import { ok } from "../utils/api-response.js";
 import { upload } from "../middleware/upload.js";
 import { requireAuth } from "../middleware/require-auth.js";
 import * as userRepo from "../repositories/user-repository.js";
+import * as bookRepo from "../repositories/book-repository.js";
 
 const router = express.Router();
 
@@ -20,8 +22,9 @@ router.post(
       const user = await userRepo.updateProfile(req.auth.userId, {
         profilePicture: imageUrl
       });
+      const bookCount = await bookRepo.countBooks();
 
-      return res.json({ message: "Profile picture updated", imageUrl, user });
+      return ok(res, { imageUrl, user: { ...user.toJSON(), bookCount } });
     } catch (err) {
       next(err);
     }

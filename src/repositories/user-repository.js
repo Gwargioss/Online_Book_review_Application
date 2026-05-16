@@ -19,15 +19,15 @@ export async function incrementTokenVersion(userId) {
 }
 
 export async function updateProfile(userId, payload) {
-  return User.findByIdAndUpdate(
-    userId,
-    {
-      $set: {
-        name: payload.name,
-        email: payload.email.toLowerCase(),
-        profilePicture: payload.profilePicture
-      }
-    },
-    { new: true }
-  ).exec();
+  const update = {
+    name: payload.name,
+    profilePicture: payload.profilePicture,
+    favoriteGenre: payload.favoriteGenre || ""
+  };
+
+  if (typeof payload.email === "string") {
+    update.email = payload.email.toLowerCase();
+  }
+
+  return User.findByIdAndUpdate(userId, { $set: update }, { new: true }).exec();
 }
