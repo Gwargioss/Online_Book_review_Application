@@ -25,8 +25,8 @@ const baseEnv = cleanEnv(process.env, {
   REFRESH_TOKEN_SECRET: str({ default: "" }),
 
   // How long each token stays valid
-  ACCESS_TOKEN_EXPIRES_IN: str({ default: "15m" }),
-  REFRESH_TOKEN_EXPIRES_IN: str({ default: "30d" }),
+  ACCESS_TOKEN_EXPIRES_IN: str({ default: "60m" }),
+  REFRESH_TOKEN_EXPIRES_IN: str({ default: "60d" }),
 
   // Refresh token cookie settings
   COOKIE_NAME: str({ default: "bookverse_refresh" }),
