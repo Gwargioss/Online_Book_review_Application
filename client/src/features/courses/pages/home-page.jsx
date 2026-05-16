@@ -18,7 +18,10 @@ export default function HomePage() {
         const payload = Array.isArray(response.data) ? response.data : [];
         setCourses(payload);
       } catch (err) {
-        setError(err.message);
+        const isCanceled = err?.message === "canceled" || err?.code === "ERR_CANCELED" || err?.name === "CanceledError";
+        if (!isCanceled) {
+          setError(err.message);
+        }
       } finally {
         setLoading(false);
       }

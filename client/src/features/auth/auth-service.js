@@ -21,6 +21,14 @@ export async function meRequest() {
   return normalizeApiResponse(res.data);
 }
 
+export async function uploadProfilePictureRequest(file) {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await http.post("/upload-profile", formData);
+  return normalizeApiResponse(res.data);
+}
+
 export async function updateProfileRequest(payload) {
   const res = await http.put("/auth/profile", payload);
   return normalizeApiResponse(res.data);

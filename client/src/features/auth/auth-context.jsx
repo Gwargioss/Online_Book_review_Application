@@ -5,7 +5,8 @@ import {
   refreshRequest,
   registerRequest,
   logoutRequest,
-  updateProfileRequest
+  updateProfileRequest,
+  uploadProfilePictureRequest
 } from "./auth-service";
 import { clearAccessToken, getAccessToken, saveAccessToken } from "../../shared/utils/token-storage";
 
@@ -82,6 +83,15 @@ export function AuthProvider({ children }) {
     return response;
   };
 
+  const uploadProfilePicture = async (file) => {
+    const response = await uploadProfilePictureRequest(file);
+    if (!response.success) throw new Error(response.message || "Image upload failed.");
+    if (response.data?.user) {
+      setUser(response.data.user);
+    }
+    return response;
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -93,6 +103,7 @@ export function AuthProvider({ children }) {
       register,
       refresh,
       updateProfile,
+      uploadProfilePicture,
       logout
     }),
     [user, isReady, authError]
