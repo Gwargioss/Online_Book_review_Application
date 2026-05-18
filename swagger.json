@@ -1,19 +1,15 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.0.0",
   "info": {
     "title": "BookVerse API",
-    "version": "1.0.0",
-    "description": "Online Book Review Application API"
+    "description": "API documentation for BookVerse, an interactive online platform for book enthusiasts to explore books, read reviews, and contribute insights.",
+    "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://localhost:3000/api/v1"
+      "url": "http://localhost:3000/api",
+      "description": "Local Development Server"
     }
-  ],
-  "tags": [
-    { "name": "Auth" },
-    { "name": "Books" },
-    { "name": "Reviews" }
   ],
   "components": {
     "securitySchemes": {
@@ -24,73 +20,33 @@
       }
     },
     "schemas": {
-      "ApiSuccess": {
+      "User": {
         "type": "object",
         "properties": {
-          "success": { "type": "boolean", "example": true },
-          "data": { "type": "object" }
+          "id": { "type": "string", "example": "60d0fe4f5311236168a109ca" },
+          "username": { "type": "string", "example": "booklover99" },
+          "name": { "type": "string", "example": "Ahmed Ali" },
+          "email": { "type": "string", "format": "email", "example": "ahmed@example.com" },
+          "profilePictureUrl": { "type": "string", "format": "uri", "example": "https://example.com/avatar.jpg" }
         }
       },
-      "RegisterRequest": {
+      "Book": {
         "type": "object",
-        "required": ["username", "password"],
+        "required": ["isbn", "title", "author"],
         "properties": {
-          "username": { "type": "string", "example": "reader01" },
-          "password": { "type": "string", "example": "password123" }
+          "isbn": { "type": "string", "example": "978-3-16-148410-0" },
+          "title": { "type": "string", "example": "The Great Gatsby" },
+          "author": { "type": "string", "example": "F. Scott Fitzgerald" }
         }
       },
-      "LoginRequest": {
+      "Review": {
         "type": "object",
-        "required": ["username", "password"],
+        "required": ["reviewText", "bookReference"],
         "properties": {
-          "username": { "type": "string", "example": "reader01" },
-          "password": { "type": "string", "example": "password123" }
-        }
-      },
-      "ProfileUpdateRequest": {
-        "type": "object",
-        "required": ["name", "email", "profilePicture"],
-        "properties": {
-          "name": { "type": "string", "example": "Reader Name" },
-          "email": { "type": "string", "format": "email", "example": "reader@mail.com" },
-          "profilePicture": { "type": "string", "format": "uri", "example": "https://example.com/avatar.png" }
-        }
-      },
-      "PublishBookRequest": {
-        "type": "object",
-        "required": ["ISBN", "title", "author"],
-        "properties": {
-          "ISBN": { "type": "string", "example": "9780132350884" },
-          "title": { "type": "string", "example": "Clean Code" },
-          "author": { "type": "string", "example": "Robert C. Martin" }
-        }
-      },
-      "SearchIsbnRequest": {
-        "type": "object",
-        "required": ["ISBN"],
-        "properties": {
-          "ISBN": { "type": "string", "example": "9780132350884" }
-        }
-      },
-      "SearchTitleRequest": {
-        "type": "object",
-        "required": ["title"],
-        "properties": {
-          "title": { "type": "string", "example": "Clean Code" }
-        }
-      },
-      "SearchAuthorRequest": {
-        "type": "object",
-        "required": ["author"],
-        "properties": {
-          "author": { "type": "string", "example": "Robert C. Martin" }
-        }
-      },
-      "ReviewUpsertRequest": {
-        "type": "object",
-        "required": ["review_text"],
-        "properties": {
-          "review_text": { "type": "string", "example": "Excellent and practical book." }
+          "id": { "type": "string", "example": "60d0fe4f5311236168a109cb" },
+          "reviewText": { "type": "string", "example": "A fascinating read with profound insights." },
+          "bookReference": { "type": "string", "description": "ISBN or Book ID", "example": "978-3-16-148410-0" },
+          "userReference": { "type": "string", "description": "User ID", "example": "60d0fe4f5311236168a109ca" }
         }
       }
     }
@@ -98,207 +54,138 @@
   "paths": {
     "/auth/register": {
       "post": {
-        "tags": ["Auth"],
-        "summary": "Register user",
+        "tags": ["User Management"],
+        "summary": "Register a new user",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" },
+                  "name": { "type": "string" },
+                  "email": { "type": "string" }
+                }
+              }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Created"
-          }
+          "201": { "description": "User registered successfully" }
         }
       }
     },
     "/auth/login": {
       "post": {
-        "tags": ["Auth"],
-        "summary": "Login user",
+        "tags": ["User Management"],
+        "summary": "User login",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Authenticated"
+            "description": "Successful login",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string", "description": "JWT Token" }
+                  }
+                }
+              }
+            }
           }
         }
       }
     },
-    "/auth/refresh": {
-      "post": {
-        "tags": ["Auth"],
-        "summary": "Refresh access token",
-        "responses": {
-          "200": {
-            "description": "Token refreshed"
-          }
-        }
-      }
-    },
-    "/auth/me": {
-      "get": {
-        "tags": ["Auth"],
-        "summary": "Current user profile",
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Current user"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
-    "/auth/profile": {
+    "/users/profile": {
       "put": {
-        "tags": ["Auth"],
+        "tags": ["User Management"],
         "summary": "Update user profile",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/ProfileUpdateRequest" }
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "profilePictureUrl": { "type": "string" }
+                }
+              }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Profile updated"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
-    "/auth/logout": {
-      "post": {
-        "tags": ["Auth"],
-        "summary": "Logout user",
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Logged out"
-          }
+          "200": { "description": "Profile updated successfully" },
+          "401": { "description": "Unauthorized" }
         }
       }
     },
     "/books": {
       "get": {
-        "tags": ["Books"],
-        "summary": "List books (paginated)",
+        "tags": ["Book Management"],
+        "summary": "List available books with pagination and searching",
         "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "schema": { "type": "integer", "minimum": 1 }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": { "type": "integer", "minimum": 1, "maximum": 60 }
-          }
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer" } },
+          { "name": "title", "in": "query", "schema": { "type": "string" } },
+          { "name": "author", "in": "query", "schema": { "type": "string" } }
         ],
         "responses": {
           "200": {
-            "description": "Books list"
+            "description": "List of books",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Book" }
+                }
+              }
+            }
           }
         }
       },
       "post": {
-        "tags": ["Books"],
-        "summary": "Publish new book",
+        "tags": ["Book Management"],
+        "summary": "Publish a new book",
+        "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/PublishBookRequest" }
+              "schema": { "$ref": "#/components/schemas/Book" }
             }
           }
         },
         "responses": {
-          "201": {
-            "description": "Book created"
-          }
+          "201": { "description": "Book published successfully" },
+          "401": { "description": "Unauthorized" }
         }
       }
     },
-    "/books/byISBN": {
-      "post": {
-        "tags": ["Books"],
-        "summary": "Search books by ISBN",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/SearchIsbnRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Search result"
-          }
-        }
-      }
-    },
-    "/books/byTitle": {
-      "post": {
-        "tags": ["Books"],
-        "summary": "Search books by title",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/SearchTitleRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Search result"
-          }
-        }
-      }
-    },
-    "/books/byAuthor": {
-      "post": {
-        "tags": ["Books"],
-        "summary": "Search books by author",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/SearchAuthorRequest" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Search result"
-          }
-        }
-      }
-    },
-    "/books/{id}/reviews": {
+    "/books/{isbn}": {
       "get": {
-        "tags": ["Reviews"],
-        "summary": "List reviews for a book",
+        "tags": ["Book Management"],
+        "summary": "Search book by ISBN",
         "parameters": [
           {
-            "name": "id",
+            "name": "isbn",
             "in": "path",
             "required": true,
             "schema": { "type": "string" }
@@ -306,58 +193,80 @@
         ],
         "responses": {
           "200": {
-            "description": "Reviews list"
-          }
+            "description": "Book details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Book" }
+              }
+            }
+          },
+          "404": { "description": "Book not found" }
         }
-      },
+      }
+    },
+    "/reviews": {
+      "post": {
+        "tags": ["Review System"],
+        "summary": "Create a new book review",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bookReference": { "type": "string", "description": "ISBN of the book being reviewed" },
+                  "reviewText": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Review created successfully" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/reviews/{id}": {
       "put": {
-        "tags": ["Reviews"],
-        "summary": "Create or update own review",
+        "tags": ["Review System"],
+        "summary": "Update an existing review",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": { "$ref": "#/components/schemas/ReviewUpsertRequest" }
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reviewText": { "type": "string" }
+                }
+              }
             }
           }
         },
         "responses": {
-          "200": {
-            "description": "Review saved"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
+          "200": { "description": "Review updated successfully" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden - Users can only modify their own reviews" }
         }
       },
       "delete": {
-        "tags": ["Reviews"],
-        "summary": "Delete own review",
+        "tags": ["Review System"],
+        "summary": "Delete a review",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": {
-            "description": "Review deleted"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
+          "200": { "description": "Review deleted successfully" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Forbidden - Users can only delete their own reviews" }
         }
       }
     }
