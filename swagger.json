@@ -2,12 +2,12 @@
   "openapi": "3.0.0",
   "info": {
     "title": "BookVerse API",
-    "description": "API documentation for BookVerse, an interactive online platform for book enthusiasts to explore books, read reviews, and contribute insights.",
-    "version": "1.0.0"
+    "description": "BookVerse is an online book review application that allows users to register, browse books, and submit reviews.",
+    "version": "2.0.0"
   },
   "servers": [
     {
-      "url": "http://localhost:3000/api",
+      "url": "http://localhost:3000/api/v1",
       "description": "Local Development Server"
     }
   ],
@@ -16,37 +16,38 @@
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
-        "bearerFormat": "JWT"
+        "bearerFormat": "JWT",
+        "description": "Enter your Access Token here. (Refresh token is handled via httpOnly cookie)"
       }
     },
     "schemas": {
-      "User": {
+      "SuccessResponse": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "example": "60d0fe4f5311236168a109ca" },
-          "username": { "type": "string", "example": "booklover99" },
-          "name": { "type": "string", "example": "Ahmed Ali" },
-          "email": { "type": "string", "format": "email", "example": "ahmed@example.com" },
-          "profilePictureUrl": { "type": "string", "format": "uri", "example": "https://example.com/avatar.jpg" }
+          "success": { "type": "boolean", "example": true },
+          "data": { "type": "object" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": {
+            "type": "object",
+            "properties": {
+              "message": { "type": "string", "example": "Human readable error" }
+            }
+          }
         }
       },
       "Book": {
         "type": "object",
-        "required": ["isbn", "title", "author"],
         "properties": {
-          "isbn": { "type": "string", "example": "978-3-16-148410-0" },
-          "title": { "type": "string", "example": "The Great Gatsby" },
-          "author": { "type": "string", "example": "F. Scott Fitzgerald" }
-        }
-      },
-      "Review": {
-        "type": "object",
-        "required": ["reviewText", "bookReference"],
-        "properties": {
-          "id": { "type": "string", "example": "60d0fe4f5311236168a109cb" },
-          "reviewText": { "type": "string", "example": "A fascinating read with profound insights." },
-          "bookReference": { "type": "string", "description": "ISBN or Book ID", "example": "978-3-16-148410-0" },
-          "userReference": { "type": "string", "description": "User ID", "example": "60d0fe4f5311236168a109ca" }
+          "id": { "type": "string" },
+          "ISBN": { "type": "string" },
+          "title": { "type": "string" },
+          "author": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
         }
       }
     }
@@ -54,7 +55,7 @@
   "paths": {
     "/auth/register": {
       "post": {
-        "tags": ["User Management"],
+        "tags": ["Auth Endpoints"],
         "summary": "Register a new user",
         "requestBody": {
           "required": true,
@@ -62,31 +63,35 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["username", "password"],
                 "properties": {
-                  "username": { "type": "string" },
-                  "password": { "type": "string" },
-                  "name": { "type": "string" },
-                  "email": { "type": "string" }
+                  "username": { "type": "string", "minLength": 3, "maxLength": 32 },
+                  "password": { "type": "string", "minLength": 8, "maxLength": 72 }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "User registered successfully" }
+          "201": { "description": "User created successfully" },
+          "400": { "description": "Invalid or missing fields" },
+          "409": { "description": "Username already exists" },
+          "500": { "description": "Server error" }
         }
       }
     },
     "/auth/login": {
       "post": {
-        "tags": ["User Management"],
+        "tags": ["Auth Endpoints"],
         "summary": "User login",
+        "description": "Logs in an existing user and returns a JWT token as an httpOnly cookie.",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["username", "password"],
                 "properties": {
                   "username": { "type": "string" },
                   "password": { "type": "string" }
@@ -96,26 +101,41 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "Successful login",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": { "type": "string", "description": "JWT Token" }
-                  }
-                }
-              }
-            }
-          }
+          "200": { "description": "Successful login" },
+          "400": { "description": "Invalid or missing fields" },
+          "401": { "description": "Wrong username or password" },
+          "500": { "description": "Server error" }
         }
       }
     },
-    "/users/profile": {
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth Endpoints"],
+        "summary": "Refresh Token",
+        "description": "Generates a new access token using the refresh token stored in the cookie.",
+        "responses": {
+          "200": { "description": "New access token generated" },
+          "401": { "description": "Invalid or expired refresh token" },
+          "500": { "description": "Server error" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth Endpoints"],
+        "summary": "Get Current User",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Current user information" },
+          "401": { "description": "Not authenticated" },
+          "500": { "description": "Server error" }
+        }
+      }
+    },
+    "/auth/profile": {
       "put": {
-        "tags": ["User Management"],
-        "summary": "Update user profile",
+        "tags": ["Auth Endpoints"],
+        "summary": "Update Profile",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -125,7 +145,8 @@
                 "type": "object",
                 "properties": {
                   "name": { "type": "string" },
-                  "profilePictureUrl": { "type": "string" }
+                  "email": { "type": "string" },
+                  "profilePicture": { "type": "string" }
                 }
               }
             }
@@ -133,81 +154,41 @@
         },
         "responses": {
           "200": { "description": "Profile updated successfully" },
-          "401": { "description": "Unauthorized" }
+          "400": { "description": "Invalid or missing fields" },
+          "401": { "description": "Not authenticated" },
+          "500": { "description": "Server error" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth Endpoints"],
+        "summary": "Logout",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Logged out successfully" },
+          "401": { "description": "Not authenticated" },
+          "500": { "description": "Server error" }
         }
       }
     },
     "/books": {
       "get": {
-        "tags": ["Book Management"],
-        "summary": "List available books with pagination and searching",
+        "tags": ["Book Endpoints"],
+        "summary": "List All Books",
         "parameters": [
-          { "name": "page", "in": "query", "schema": { "type": "integer" } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer" } },
-          { "name": "title", "in": "query", "schema": { "type": "string" } },
-          { "name": "author", "in": "query", "schema": { "type": "string" } }
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "maximum": 60, "default": 24 } }
         ],
         "responses": {
-          "200": {
-            "description": "List of books",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Book" }
-                }
-              }
-            }
-          }
+          "200": { "description": "Paginated list of books" },
+          "400": { "description": "Invalid query parameters" },
+          "500": { "description": "Server error" }
         }
       },
       "post": {
-        "tags": ["Book Management"],
-        "summary": "Publish a new book",
-        "security": [{ "bearerAuth": [] }],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/Book" }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "Book published successfully" },
-          "401": { "description": "Unauthorized" }
-        }
-      }
-    },
-    "/books/{isbn}": {
-      "get": {
-        "tags": ["Book Management"],
-        "summary": "Search book by ISBN",
-        "parameters": [
-          {
-            "name": "isbn",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Book details",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Book" }
-              }
-            }
-          },
-          "404": { "description": "Book not found" }
-        }
-      }
-    },
-    "/reviews": {
-      "post": {
-        "tags": ["Review System"],
-        "summary": "Create a new book review",
+        "tags": ["Book Endpoints"],
+        "summary": "Publish a Book",
         "security": [{ "bearerAuth": [] }],
         "requestBody": {
           "required": true,
@@ -215,24 +196,116 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["ISBN", "title", "author"],
                 "properties": {
-                  "bookReference": { "type": "string", "description": "ISBN of the book being reviewed" },
-                  "reviewText": { "type": "string" }
+                  "ISBN": { "type": "string" },
+                  "title": { "type": "string" },
+                  "author": { "type": "string" }
                 }
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Review created successfully" },
-          "401": { "description": "Unauthorized" }
+          "201": { "description": "Book added successfully" },
+          "400": { "description": "Invalid or missing fields" },
+          "409": { "description": "Book with this ISBN already exists" },
+          "500": { "description": "Server error" }
         }
       }
     },
-    "/reviews/{id}": {
+    "/books/byISBN": {
+      "post": {
+        "tags": ["Book Endpoints"],
+        "summary": "Search by ISBN",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["ISBN"],
+                "properties": {
+                  "ISBN": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Book found" },
+          "400": { "description": "Invalid or missing ISBN" },
+          "500": { "description": "Server error" }
+        }
+      }
+    },
+    "/books/byTitle": {
+      "post": {
+        "tags": ["Book Endpoints"],
+        "summary": "Search by Title",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Books found" },
+          "400": { "description": "Invalid or missing title" },
+          "500": { "description": "Server error" }
+        }
+      }
+    },
+    "/books/byAuthor": {
+      "post": {
+        "tags": ["Book Endpoints"],
+        "summary": "Search by Author",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["author"],
+                "properties": {
+                  "author": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Books found" },
+          "400": { "description": "Invalid or missing author" },
+          "500": { "description": "Server error" }
+        }
+      }
+    },
+    "/books/{id}/reviews": {
+      "get": {
+        "tags": ["Review Endpoints"],
+        "summary": "List Reviews for a Book",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of reviews" },
+          "400": { "description": "Invalid book ID" },
+          "404": { "description": "Book not found" },
+          "500": { "description": "Server error" }
+        }
+      },
       "put": {
-        "tags": ["Review System"],
-        "summary": "Update an existing review",
+        "tags": ["Review Endpoints"],
+        "summary": "Create or Update a Review",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -243,30 +316,34 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["review_text"],
                 "properties": {
-                  "reviewText": { "type": "string" }
+                  "review_text": { "type": "string", "maxLength": 2000 }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Review updated successfully" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden - Users can only modify their own reviews" }
+          "200": { "description": "Review created/updated successfully" },
+          "400": { "description": "Invalid or missing fields" },
+          "401": { "description": "Not authenticated" },
+          "404": { "description": "Book not found" },
+          "500": { "description": "Server error" }
         }
       },
       "delete": {
-        "tags": ["Review System"],
-        "summary": "Delete a review",
+        "tags": ["Review Endpoints"],
+        "summary": "Delete a Review",
         "security": [{ "bearerAuth": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
           "200": { "description": "Review deleted successfully" },
-          "401": { "description": "Unauthorized" },
-          "403": { "description": "Forbidden - Users can only delete their own reviews" }
+          "401": { "description": "Not authenticated" },
+          "404": { "description": "Review or book not found" },
+          "500": { "description": "Server error" }
         }
       }
     }
