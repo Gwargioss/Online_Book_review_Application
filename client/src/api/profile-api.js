@@ -15,4 +15,3 @@ export async function updateProfile(payload) {
   const res = await http.patch("/auth/me", payload);
   return res.data;
 }
- 
