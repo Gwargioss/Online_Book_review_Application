@@ -1,0 +1,645 @@
+- require('./path') //to import module 
+- export = {function1,function2} //used to export multiple functions at a time to a different module
+- when you require the same thing multible time the first time will be store on cache 
+- require.cache // used to check the cache elements
+- file system => const fs = require('node:fs'); //fs used to create file synchronously 
+- blocking vs non-blocking => blocking is the code not run below code until the current finish and this appear on synchronously and non blocking is the not synchronously (below code run in the same time) and Non-blocking operations are handled by the Event Loop ,🧠 Non-blocking code does NOT run in the Event Loop, The Event Loop only schedules its callback
+- fs.readFile(path, encoding, CALLBACK); CALLBACK may be isolated function and also may merge on the code like this :
+- Create nodemon: npm init -y then npm install --save-dev nodemon then go to package.json and in "script":{"start" "nodemon index.js"} then write on terminal npm run start
+-fs.readFile('./notes.txt', 'utf8', function (err, data) {
+    if (err) {
+        console.log('Error reading file', err);
+    } else {
+        console.log(data);
+    }
+}); notes:  function (err, data) = (err, data) => arow function  
+-function without name called Anonymous function 
+- node js is single-threaded, but non-blocking that is mean (no parrallel execution) Thread = excution path but should know is single-threaded but Asynchrounous  
+console.log("1");
+
+setTimeout(() => {
+    console.log("2");
+}, 0);
+
+console.log("3");
+Out Put is :''
+1
+3
+2
+why:
+setTimeout will be excuted Out of JavaScript (C++/C) and after finish callback queue
+libuv handeled it and used thread pool 
+- Streaming (writable,readable,duplex,transform) stream is used to divide file with big data into a chunks to be easy to read and write
+-npm (Node Package Manager) (nodemon is used to live interaction) (commander to build CLI(Command Line Interface))
+-inquirer is allows you to ask the user interactive questions directly through the terminal, instead of forcing them to type complex commands or long arguments.
+-#!/usr/bin/env node 
+-libuv it has many features ,I will foucus on Event Loop & Thread Pool
+-note: any function ended with Sync (Synchronous function) not accept callback  visit https://docs.libuv.org
+-node is not the best language for cpu as default size for thread pool is 4 it can be changed using UV_THREADPOOL_SIZE environment variable and max size is 1024 (related with cup cores)
+-fetch(url).then(() => {
+    console.log(...)
+})
+fetch هي Web API (مش جزء من JavaScript نفسه).
+وظيفتها:
+تبعت HTTP request (GET / POST / PUT / DELETE …)
+وترجعلك Promise بيمثل نتيجة الريكوست.
+📌 مهم:
+fetch غير Blocking
+شغالة asynchronously
+مبنية على Promises (pending, fulfilled,rejected)
+        Promise
+           |
+        pending
+         /   \
+fulfilled   rejected
+الـ Promise مينفعش يرجع pending
+ومينفعش يبقى fulfilled وبعدين rejected
+.then means لما الريكوست يخلص بنجاح → نفّذ اللي جوه then
+.then() مش بتتنفذ فورًا
+بتتحط في Microtask Queue
+┌──────────────┐
+│   Node.js    │  ← الإطار كله
+│              │
+│ ┌──────────┐ │
+│ │ Call     │ │
+│ │ Stack    │ │  ← تنفيذ JS فقط excute JS,CallBack,Promise resolution - Single thread - if crashed node is dead
+│ └──────────┘ │
+│              │
+│ ┌──────────┐ │
+│ │ Event    │ │
+│ │ Loop     │ │  ← المنسّق no excution any thing , no work with I/O , no count - only see if Call Stack is free and Pull from queues and after pulling push in call stack
+│ └──────────┘ │
+│              │
+│ ┌──────────┐ │
+│ │ Queues   │ │                  while (true) {
+│                                   if (callStack not empty) 
+│  1) process.nextTick                  continue;         // I will write what is in each queue
+│  2) Microtasks (Promises)         run process.nextTick queue completely; // process.nextTick(fn)
+│  3) Timers                        run microtask queue completely; // promise.then - Promise.catch - Promise.catch - async / await (بعد الـ await) - queueMicrotask(fn)
+│  4) I/O callbacks                 run timers phase; //setTimeout - setInterval
+│  5) setImmediate                  run I/O callbacks phase; // fs.writeFile - fs.readFile
+│  └──────────┘                     run check phase;   // setImmediate(fn)
+│              │                }
+│ ┌──────────┐ │
+│ │ Thread   │ │
+│ │ Pool     │ │  ← شغل تقيل(out of thread)
+│ └──────────┘ │
+└──────────────┘
+
+╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                                                                                       ║
+║   Event Loop Diagram                                                                                                                      node  ◆  JS ║
+║                                                                                                                                                       ║
+╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+                                                                                                                                       Continue / Exit
+                                                                                                                                              │
+                                                                                                                                              │
+         ┌──────────┐         ┌──────────────────┐         ┌──────────────┐         ┌──────────┐              ┌──────────────┐         ┌──────────────┐         
+         │          │         │                  │         │              │         │          │       +      │              │         │              │                       
+         │ index.js │───────▶│ Microtasks Queue │────────▶│ Timers Queue │────────▶│ I/O Queue│──────────────│ Check Queue  │────────▶│ Close Queue │              
+         │          │         │                  │         │              │         │          │  I/O Polling │              │         │              │                   
+         └──────────┘         │ process.nextTick │         └──────┬───────┘         └─────┬────┘              └──────┬───────┘         └──────┬───────┘         
+                              │                  │                │                       │                          │                         │                         
+                              │ settled promises │                │                       │                          │                         │                         
+                              │                  │                │                       │                          │                         │                        
+                              └────────▲─────────┘                │                       │                          │                         │                         
+                                       │                          │                       │                          │                         │                         
+                                       │                          │                       │                          │                         │                         
+                                       │<─────────────────────────                        │                          │                         │
+                                       │<─────────────────────────────────────────────────                           │                         │                                                  
+                                       │<────────────────────────────────────────────────────────────────────────────│                         │
+                                       │<──────────────────────────────────────────────────────────────────────────────────────────────────────┘                         
+Graph:
+                ┌────────────────────┐
+                │     Call Stack     │
+                │ (JS Execution)     │
+                └─────────▲──────────┘
+                          │
+                ┌─────────┴──────────┐
+                │     Event Loop     │
+                │   (Coordinator)    │
+                └─────────▲──────────┘
+                          │
+        ┌─────────────────┼─────────────────┐
+        │                 │                 │
+┌──────────────┐   ┌──────────────┐   ┌──────────────┐
+│ nextTick Q   │   │ Microtask Q  │   │ Timers Q     │
+│              │   │              │   │              │
+│ process.next │   │ Promise.then │   │ setTimeout   │
+│              │   │ await        │   │ setInterval  │
+└──────▲───────┘   └──────▲───────┘   └──────▲───────┘
+       │                  │                  │
+       │  (High Priority) │                  │
+       └──────────────────┘                  │
+                                             │
+                           ┌─────────────────┴─────────────┐
+                           │      I/O Callbacks Queue      │
+                           │  fs / network / thread pool   │
+                           └──────────────▲────────────────┘
+                                          │
+                           ┌──────────────┴───────────────┐
+                           │        Check Queue           │
+                           │      setImmediate            │
+                           └──────────────────────────────┘
+-Create Server has been excuted for each request not for each page or not for each URL you write for only  ex: /cyberus → request  ||  /favicon.ico → request المتصفح دايمًا يعمل request تلقائي على:  || /api/data → request
+-express: npm install express --save
+-middleware: In Express, a middleware is a function that sits between the HTTP request and the HTTP response. 
+Technically, a middleware is any function with the following signature:
+(req, res, next) next → a function that passes control to the next middleware in the stack
+Middleware functions are executed sequentially, in the exact order they are registered in the code
+The Request–Response Lifecycle:
+When an HTTP request hits an Express server:
+1-Express creates req and res
+2-The request enters the middleware stack
+3-Each middleware decides one of three things:
+  .Pass control → next()
+  .End the request → res.send(), res.json(), etc.
+  .Throw or pass an error → next(err)
+If no middleware sends a response, the request hangs until timeout.
+
+3️⃣ Middleware Stack Execution Model  https://expressjs.com/en/resources/middleware/
+Express works like a stack / pipeline, not magic.
+Example:
+app.use(express.json())
+app.use(logger)
+app.use(auth)
+app.use('/api', apiRoutes)
+
+Execution order for a request to /api/users:
+1-express.json()
+2-logger
+3-auth
+4-apiRoutes
+5-matching route handler
+6-response is sent
+7-stack stops
+⚠️ Order is everything
+Express does NOT reorder anything for you.
+
+next() → goes to the next middleware
+next(err) → skips all normal middleware, jumps directly to error-handling middleware.
+
+5️⃣ How Does the Cycle Stop?
+The request–response cycle logically ends when you send a response:
+res.send()
+res.json()
+res.end()
+res.redirect()
+
+After this:
+You SHOULD NOT call next()
+Express will NOT automatically block you from doing it
+If you do, you’ll get:
+Error: Can't set headers after they are sent
+
+6️⃣ Error-Handling Middleware (Special Case)
+app.use((err, req, res, next) => {
+  res.status(500).json({ message: err.message })
+})
+If you don’t define this → app crashes or leaks errors.
+
+Common Mistakes (Interview Traps):
+❌ “Everything in Express is middleware”
+❌ Calling next() after res.send()
+❌ Forgetting error middleware
+❌ Wrong middleware order
+❌ Assuming Express has defaults
+❌ Parsing body after routes
+
+One-Sentence Killer Summary (Use This)
+Express handles requests using a middleware stack where each middleware function decides whether to pass control, end the response, or forward an error, and the entire flow depends strictly on registration order with no built-in defaults.
+┌──────────────────────────┐
+│      Incoming Request    │
+│    (HTTP / HTTPS)        │
+└─────────────┬────────────┘
+              │
+              ▼
+┌──────────────────────────┐
+│ Express creates req/res  │
+└─────────────┬────────────┘
+              │
+              ▼
+┌──────────────────────────┐
+│ App-level Middleware #1  │  app.use()
+│ (e.g. express.json)      │
+│                          │
+│  ├─ res.send()? ──► END  │
+│  ├─ next(err)? ──► ERR   │
+│  └─ next() ──────► next  │
+└─────────────┬────────────┘
+              │
+              ▼
+┌──────────────────────────┐
+│ App-level Middleware #2  │
+│ (logger, cors, auth…)    │
+└─────────────┬────────────┘
+              │
+              ▼
+┌──────────────────────────┐
+│ Path Match?              │
+│ app.use('/api', ...)     │
+│                          │
+│  ├─ NO  ─────────► SKIP  │
+│  └─ YES ─────────► RUN   │
+└─────────────┬────────────┘
+              │
+              ▼
+┌──────────────────────────┐
+│ Router Middleware Stack  │
+│ router.use(...)          │
+│                          │
+│  ├─ next() ──────► next  │
+│  ├─ next(err) ──► ERR    │
+│  └─ res.send() ──► END   │
+└─────────────┬────────────┘
+              │
+              ▼
+┌──────────────────────────┐
+│ Route Handler            │
+│ GET /users               │
+│                          │
+│  ├─ res.send() ──► END   │
+│  └─ throw / next(err)    │
+└─────────────┬────────────┘
+              │
+              ▼
+        (if error)
+              │
+              ▼
+┌──────────────────────────┐
+│ Error Middleware         │
+│ (err, req, res, next)   │
+│                          │
+│  └─ res.status(...).send │
+└─────────────┬────────────┘
+              │
+              ▼
+┌──────────────────────────┐
+│     Response Sent        │
+│  Connection Closed       │
+└──────────────────────────┘
+
+لتنفيذ الفعلي في Express
+Middleware registered في structure شبه Array
+ببساطة:
+[
+  mw1,
+  mw2,
+  mw3,
+  routeHandler
+]
+التنفيذ:
+mw1 → mw2 → mw3 → routeHandler
+ده Sequential Forward Execution
+مش pop / push
+مش LIFO
+
+النموذج الصح: Pipeline / Chain
+Request
+  ↓
+[ mw1 ] → [ mw2 ] → [ mw3 ] → [ route ]
+  ↓         ↓         ↓
+ res.send  next()   next(err)
+
+كل middleware:
+إما يكمّل السلسلة
+إما يوقفها
+إما يحوّلها لمسار أخطاء
+نقطة مهمة جدًا
+Error middleware بتكسر التسلسل
+next(err)
+يعمل:
+mw1 → mw2 → ERROR_HANDLER
+وده مش FIFO ولا LIFO
+ده conditional jump.
+C
+Express uses a middleware pipeline (chain of responsibility), where middleware functions are executed sequentially in registration order, and control flow is explicitly managed via next() rather than stack or queue semantics.
+Neither. Express middleware is executed sequentially as a pipeline, not using strict stack or queue semantics.
+
+-Morgan 
+-API: Application Programmatic Interface 
+-Postman: Simulate client connect with server using URL
+-Express in minimalist so we need more validator for making up some conditions so we install (npm install express-validator) and Joi (npm install Joi)
+-We can use https://sequelize.org/ to integrate SQL 
+-jsend , cors packages
+-What find() actually does:
+Model.find(filter, projection, options)
+Parameters:
+filter → Query condition
+projection → Fields to return
+options → limit, sort, skip, etc.
+
+Example with everything:
+const users = await User.find(
+  { age: { $gte: 18 } },       // filter  (Give me age >= 18)
+  { name: 1, email: 1 },      // projection (Give me only name & email (return specsefic data) if i write { password: 0 } is not print password)
+  { limit: 10, sort: { age: -1 } }  // options
+);
+-paging therr are 2 ways Offset Pagination (skip / limit) is used for samll items and Cursor Pagination (Range-based) is used for large company
+ex:  Offset Pagination
+page = 3
+limit = 10
+skip = (page - 1) * limit
+تنفيذ في Mongoose:
+const users = await User.find({ age: { $gte: 18 } })
+  .sort({ createdAt: -1 })
+  .skip((page - 1) * limit)
+  .limit(limit);
+
+ex: Cursor Pagination
+const users = await User.find({
+  _id: { $lt: lastId }
+})
+.sort({ _id: -1 })
+.limit(10);
+-npm install dotenv how to use: require('dotenv').config()
+-app.all('*', (req, res) => {
+    res.status(404).json({      //used as final fallback                             
+        status: "fail",         //must be last in file
+        message: `Can't find ${req.originalUrl}`
+    });
+});  
+
+
+-Salt in bcrypt is a random value added to a password before hashing to prevent precomputed attacks and hash reuse.
+-يعني إيه API يكون Stateless؟
+Stateless = السيرفر مش بيخزن أي حالة (state) بين الطلبات.
+كل Request لازم يحتوي كل المعلومات اللي السيرفر محتاجها علشان يرد عليه.
+السيرفر يقرأ التوكن → يتحقق → يرد.
+مفيش أي session متخزنة عنده.
+لو السيرفر وقع ورجع اشتغل → مفيش حاجة اتأثرت.
+ليه؟ لأنه مش مخزن جلسات في الذاكرة.
+
+-What is the difference between JWT and session
+1️⃣ Session-Based Authentication
+How it works
+User logs in.
+Server verifies credentials.
+Server creates a session object in memory or database.
+Server sends back a session ID (usually in a cookie).
+Every request:
+Browser automatically sends the cookie.
+Server looks up session ID in storage.
+If found → user is authenticated.
+
+Architecture
+Client  --->  SessionID  --->  Server
+                      (lookup in DB/memory)
+Important properties
+🔴 Stateful
+Server must store session data.
+🔴 Needs shared storage in distributed systems.
+🔴 If server restarts and sessions are in memory → users logged out.
+🟢 Easy to revoke (just delete session from DB).
+🟢 Simple and secure when implemented correctly.
+
+2️⃣ JWT (JSON Web Token)
+How it works
+User logs in.
+Server verifies credentials.
+Server creates a signed token containing user data.
+Token is sent to client.
+Every request:
+Client sends token (usually in Authorization header).
+Server verifies signature.
+If valid → user authenticated.
+
+Architecture
+Client  --->  JWT Token  --->  Server
+                (verify signature only)
+Important properties
+
+🟢 Stateless
+Server stores NOTHING.
+🟢 Scales easily across microservices.
+🟢 No session store needed.
+🔴 Hard to revoke (unless blacklist system exists).
+🔴 Bigger attack surface if badly implemented.
+🚨 Security Differences (This is where beginners mess up)
+Session risks:
+Session fixation
+CSRF (if cookie-based)
+Need HTTPS
+Need secure cookie flags
+JWT risks:
+Storing in localStorage → XSS steals token
+No expiration → permanent access
+Using weak signing secret
+Not validating algorithm properly
+Putting sensitive data inside payload
+-🎯 What "Stateless API" Means
+Stateless =
+Each request contains everything needed for authentication.
+No server-side memory.
+Session = breaks statelessness.
+JWT = keeps statelessness.
+-🧨 Generate a Strong JWT Secret (Node.js):
+    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" 
+    and you should save this in .env file
+-Mongoose Document:
+const schema = new mongoose.Schema({
+  field: {
+    // ========= Core =========
+    type: String,                         // نوع البيانات
+    required: [true, "Required field"],   // إجباري
+    default: "DEFAULT",                   // قيمة افتراضية (أو function)
+    unique: true,                         // unique index
+    index: true,                          // index عادي
+    sparse: true,                         // index لو القيمة موجودة
+    immutable: false,                     // لا يتغير بعد الإنشاء
+    select: true,                         // يظهر في query
+    alias: "aliasName",                   // اسم بديل
+
+    // ========= Validation =========
+    validate: {
+      validator: v => v.length > 2,
+      message: "Custom validation failed"
+    },
+
+    // ========= Getters / Setters =========
+    get: v => v,
+    set: v => v.trim(),
+
+    // ========= String-only =========
+    lowercase: true,
+    uppercase: false,
+    trim: true,
+    minlength: 3,
+    maxlength: 50,
+    match: /^[a-zA-Z0-9]+$/,
+    enum: ["ADMIN", "USER", "MANAGER"],
+
+    // ========= Number / Date =========
+    min: 0,
+    max: 100,
+
+    // ========= Array =========
+    // minlength / maxlength تنفع مع Array كمان
+
+    // ========= Map =========
+    of: String,
+
+    // ========= References =========
+    ref: "User",              // لو ObjectId
+    refPath: "modelField",    // مرجع ديناميكي
+
+    // ========= TTL =========
+    expires: 3600,            // لو النوع Date
+
+    // ========= ObjectId auto =========
+    auto: false
+  }
+});
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-1️⃣ يعني إيه Starvation؟
+
+Starvation =
+Queue أو Phase عمرها ما ييجي دورها
+مش عشان مفيش وقت
+لكن عشان Queue تانية بتاكل كل الأولوية
+Node شغال
+Process شغال
+لكن:
+timers مش بتتنفذ
+I/O مش بيتخدم
+requests بتtimeout
+يعني ميت منطقيًا
+
+2️⃣ النوع الأول: process.nextTick Starvation (الأخطر)
+ليه؟
+لأن:
+nextTick أعلى أولوية من أي حاجة
+بيتنفذ بعد كل function
+ويتفرّغ بالكامل
+مثال قاتل:
+function bomb() {
+  process.nextTick(bomb);
+}
+bomb();
+
+اللي بيحصل:
+Call Stack يفضى
+Event Loop:
+يشوف nextTick queue → مش فاضية
+ينفذ bomb
+bomb يحط nextTick جديد
+repeat للأبد
+❌
+timers مش بتتنفذ
+fs callbacks مش بترجع
+server مش بيرد
+⚠️ CPU 100%
+⚠️ Memory بيزيد
+⚠️ No crash → أسوأ
+
+3️⃣ النوع التاني: Microtask Starvation (Promises)
+أخف شوية
+بس خطر برضه
+مثال:
+function loop() {
+  Promise.resolve().then(loop);
+}
+loop();
+
+اللي بيحصل:
+كل promise:
+تتحط في Microtask Queue
+Event Loop:
+يفضّي المايكروتاسك بالكامل
+مفيش فرصة لـ timers أو I/O
+الفرق؟
+process.nextTick أخطر
+microtasks أبطأ شوية
+
+4️⃣ مثال واقعي يضرب Server
+app.get("/attack", (req, res) => {
+  function lock() {
+    process.nextTick(lock);
+  }
+  lock();
+});
+
+Request واحد:
+يوقف السيرفر كله
+باقي المستخدمين؟ Bye
+⚠️ ده DoS داخلي حقيقي
+
+5️⃣ ليه Node يسمح بده؟
+عشان:
+nextTick اتعمل علشان:
+cleanup
+internal hooks
+مش معمول للloops
+Node بيفترض إنك مش غبي
+
+6️⃣ إزاي تمنع Starvation؟
+❌ متعملش:
+process.nextTick(loop);
+Promise.then(loop);
+
+✅ الحل 1: yield للـ event loop
+function safeLoop() {
+  setImmediate(safeLoop);
+}
+safeLoop();
+ليه؟
+setImmediate يسيب فرصة لـ I/O
+
+✅ الحل 2: break العمل
+function heavyWork(i = 0) {
+  if (i > 1000000) return;
+  setImmediate(() => heavyWork(i + 1));
+}
+
+✅ الحل 3: Worker Threads
+للـ CPU heavy
+
+7️⃣ علامة إن عندك starvation في production
+CPU عالي
+RAM بتزيد
+requests بتtimeout
+مفيش errors
+logs واقفة
+أسوأ سيناريو debugging
+
+الخلاصة اللي لازم تتحفر
+Starvation مش bug
+دي feature خطيرة
+process.nextTick = سكينة
+Promises = مطرقة
+Event Loop مش هيحميك

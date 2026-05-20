@@ -1,3 +1,4 @@
+// Connecting app with MongoDB 
 import mongoose from "mongoose";
 import { env } from "./env.js";
 
