@@ -11,5 +11,5 @@ export const reviewIdParams = z.object({
 
 export const createReviewSchema = z.object({
   review_text: z.string().min(1).max(2000),
-  rating: z.number().int().min(0).max(4)
+  rating: z.coerce.number().int().min(0).max(4)
 });
