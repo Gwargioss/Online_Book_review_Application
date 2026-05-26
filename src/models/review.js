@@ -23,6 +23,7 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
+// Allow multiple reviews per user/book; keep index for lookup performance.
 reviewSchema.index({ userId: 1, bookId: 1 });
 
 const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema);
