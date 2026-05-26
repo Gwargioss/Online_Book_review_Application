@@ -30,6 +30,7 @@ export function createApp() {
   app.get("/", function (req, res) {
     res.status(200).send(
       "<h1>BookVerse API</h1>" +
+      "<p>hi</p>" +
       "<p>Online Book Review API</p>" +
       "<p>API base: <code>/api/v1</code></p>" +
       "<p>API Documentation: <a href='/api-docs'>/api-docs</a></p>" // 
