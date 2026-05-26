@@ -6,16 +6,21 @@ export async function listForBook(req, res) {
   return ok(res, result.reviews);
 }
 
-export async function upsert(req, res) {
-  const result = await reviewService.upsertReview({
+export async function create(req, res) {
+  const result = await reviewService.createReview({
     userId: req.auth.userId,
     bookId: req.params.id,
-    review_text: req.body.review_text
+    review_text: req.body.review_text,
+    rating: req.body.rating
   });
   return ok(res, result);
 }
 
 export async function remove(req, res) {
-  const result = await reviewService.deleteReview({ userId: req.auth.userId, bookId: req.params.id });
+  const result = await reviewService.deleteReview({
+    userId: req.auth.userId,
+    bookId: req.params.id,
+    reviewId: req.params.reviewId
+  });
   return ok(res, result);
 }

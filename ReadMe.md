@@ -89,7 +89,8 @@ The API is exposed under `/api/v1`, and the frontend consumes it through Axios.
 ### Books
 
 - `GET /api/v1/books`
-- `POST /api/v1/books`
+- `POST /api/v1/books` (protected)
+- `DELETE /api/v1/books/:id` (protected)
 - `POST /api/v1/books/byISBN`
 - `POST /api/v1/books/byTitle`
 - `POST /api/v1/books/byAuthor`
@@ -98,7 +99,7 @@ The API is exposed under `/api/v1`, and the frontend consumes it through Axios.
 
 - `GET /api/v1/books/:id/reviews`
 - `PUT /api/v1/books/:id/reviews` (protected)
-- `DELETE /api/v1/books/:id/reviews` (protected)
+- `DELETE /api/v1/books/:id/reviews/:reviewId` (protected)
 
 ## Rubric Mapping (PDF requirements -> exact code locations)
 

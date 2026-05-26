@@ -1,11 +1,20 @@
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../../shared/constants/routes";
 
-export function CourseCard({ course }) {
+export function CourseCard({ course, canDelete, onDelete }) {
   return (
     <article className="course-card glass">
       <div className="course-card__top">
         <span className="course-tag">#{course.ISBN}</span>
+        {canDelete && (
+          <button
+            type="button"
+            className="btn btn-danger btn-xs"
+            onClick={() => onDelete?.(course)}
+          >
+            Delete
+          </button>
+        )}
       </div>
       <h3>{course.title}</h3>
       <p>By {course.author}</p>

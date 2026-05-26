@@ -123,7 +123,7 @@ Returns paginated books list.
 - `page` (optional, int)
 - `limit` (optional, int, max 60)
 
-## `POST /books`
+## `POST /books` (Protected)
 Publishes a new book.
 
 ### Request
@@ -144,6 +144,9 @@ Search books by title.
 ## `POST /books/byAuthor`
 Search books by author.
 
+## `DELETE /books/:id` (Protected)
+Deletes a book created by the authenticated publisher.
+
 ---
 
 ## Review Endpoints
@@ -152,17 +155,19 @@ Search books by author.
 Lists reviews for a specific book.
 
 ## `PUT /books/:id/reviews` (Protected)
-Creates or updates authenticated user's review for the book.
+Creates a new review for the book. Multiple reviews per user are allowed.
 
 ### Request
 ```json
 {
-  "review_text": "Excellent and practical book."
+  "review_text": "Excellent and practical book.",
+  "rating": 4
 }
 ```
+Rating must be an integer between 0 and 4.
 
-## `DELETE /books/:id/reviews` (Protected)
-Deletes authenticated user's review for the book.
+## `DELETE /books/:id/reviews/:reviewId` (Protected)
+Deletes the authenticated user's review by id.
 
 ---
 

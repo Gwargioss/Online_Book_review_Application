@@ -19,5 +19,6 @@ describe("app root", () => {
     const app = await makeApp();
     const res = await request(app).get("/");
     expect(res.status).toBe(200);
+    expect(res.text).toContain("hi");
   });
 });

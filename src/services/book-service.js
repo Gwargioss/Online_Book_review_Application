@@ -1,5 +1,7 @@
 import { AppError } from "../utils/app-error.js";
+import { isValidObjectId } from "../utils/mongo.js";
 import * as bookRepo from "../repositories/book-repository.js";
+import * as reviewRepo from "../repositories/review-repository.js";
 
 export async function listBooks({ page = 1, limit = 24 }) {
   const safeLimit = Math.min(Math.max(Number(limit) || 24, 1), 60);
@@ -13,9 +15,12 @@ export async function listBooks({ page = 1, limit = 24 }) {
   };
 }
 
-export async function publishBook({ ISBN, title, author, content = "" }) {
+export async function publishBook({ ISBN, title, author, content = "", publisherId }) {
+  if (!publisherId) {
+    throw new AppError({ code: "UNAUTHORIZED", status: 401, message: "Authentication required." });
+  }
   try {
-    const book = await bookRepo.createBook({ ISBN, title, author, content });
+    const book = await bookRepo.createBook({ ISBN, title, author, content, publisherId });
     return { book };
   } catch (err) {
     if (err?.code === 11000) {
@@ -25,10 +30,31 @@ export async function publishBook({ ISBN, title, author, content = "" }) {
   }
 }
 
-export async function updateBookContent(bookId, content) {
-  const book = await bookRepo.updateBookContent(bookId, content);
+export async function updateBookContent(bookId, content, userId) {
+  if (!isValidObjectId(bookId)) {
+    throw new AppError({ code: "INVALID_ID", status: 422, message: "Invalid book id." });
+  }
+  const book = await bookRepo.findBookById(bookId);
   if (!book) throw new AppError({ code: "NOT_FOUND", status: 404, message: "Book not found." });
-  return book;
+  if (book.publisherId?.toString() !== userId) {
+    throw new AppError({ code: "FORBIDDEN", status: 403, message: "You can only update your own books." });
+  }
+  const updated = await bookRepo.updateBookContent(bookId, content);
+  if (!updated) throw new AppError({ code: "NOT_FOUND", status: 404, message: "Book not found." });
+  return updated;
+}
+
+export async function deleteBook({ bookId, userId }) {
+  if (!isValidObjectId(bookId)) {
+    throw new AppError({ code: "INVALID_ID", status: 422, message: "Invalid book id." });
+  }
+  const book = await bookRepo.findBookById(bookId);
+  if (!book) throw new AppError({ code: "NOT_FOUND", status: 404, message: "Book not found." });
+  if (book.publisherId?.toString() !== userId) {
+    throw new AppError({ code: "FORBIDDEN", status: 403, message: "You can only delete your own books." });
+  }
+  await Promise.all([bookRepo.deleteBookById(bookId), reviewRepo.deleteReviewsForBook({ bookId })]);
+  return { deleted: true };
 }
 
 export async function searchByISBN({ ISBN }) {

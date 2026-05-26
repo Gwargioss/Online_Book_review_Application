@@ -22,6 +22,11 @@ const bookSchema = new mongoose.Schema(
       trim: true,
       maxlength: 100
     },
+    publisherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      index: true
+    },
     content: {
       type: String,
       default: ""
@@ -34,6 +39,7 @@ const bookSchema = new mongoose.Schema(
       versionKey: false,
       transform: (doc, ret) => {
         ret.id = ret._id?.toString();
+        ret.publisherId = ret.publisherId?.toString();
         delete ret._id;
         return ret;
       }

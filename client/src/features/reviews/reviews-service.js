@@ -6,12 +6,12 @@ export async function getBookReviews(bookId, signal) {
   return normalizeApiResponse(res.data);
 }
 
-export async function upsertBookReview(bookId, review_text) {
-  const res = await http.put(`/books/${bookId}/reviews`, { review_text });
+export async function createBookReview(bookId, review_text, rating) {
+  const res = await http.put(`/books/${bookId}/reviews`, { review_text, rating });
   return normalizeApiResponse(res.data);
 }
 
-export async function removeBookReview(bookId) {
-  const res = await http.delete(`/books/${bookId}/reviews`);
+export async function removeBookReview(bookId, reviewId) {
+  const res = await http.delete(`/books/${bookId}/reviews/${reviewId}`);
   return normalizeApiResponse(res.data);
 }

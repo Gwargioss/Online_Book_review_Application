@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../../src/services/book-service.js", () => ({
   listBooks: vi.fn(),
   publishBook: vi.fn(),
+  deleteBook: vi.fn(),
   searchByISBN: vi.fn(),
   searchByTitle: vi.fn(),
   searchByAuthor: vi.fn()
@@ -22,6 +23,12 @@ async function makeApp() {
   applyTestEnv();
   const { createApp } = await import("../../src/app.js");
   return createApp();
+}
+
+async function makeToken() {
+  applyTestEnv();
+  const { signAccessToken } = await import("../../src/utils/jwt.js");
+  return signAccessToken({ sub: "507f1f77bcf86cd799439011", username: "reader", tokenVersion: 0 });
 }
 
 describe("book routes", () => {
@@ -47,10 +54,27 @@ describe("book routes", () => {
       book: { id: "b1", ISBN: "123", title: "Book", author: "Author" }
     });
     const app = await makeApp();
+    const token = await makeToken();
 
-    const res = await request(app).post("/api/v1/books").send({ ISBN: "123", title: "Book", author: "Author" });
+    const res = await request(app)
+      .post("/api/v1/books")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ ISBN: "123", title: "Book", author: "Author" });
 
     expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+  });
+
+  it("DELETE /api/v1/books/:id", async () => {
+    bookService.deleteBook.mockResolvedValue({ deleted: true });
+    const app = await makeApp();
+    const token = await makeToken();
+
+    const res = await request(app)
+      .delete("/api/v1/books/507f1f77bcf86cd799439011")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
   });
 

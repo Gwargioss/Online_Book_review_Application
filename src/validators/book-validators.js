@@ -5,6 +5,10 @@ export const listBooksQuery = z.object({
   limit: z.coerce.number().int().positive().max(60).optional()
 });
 
+export const bookIdParams = z.object({
+  id: z.string().min(1)
+});
+
 export const publishBookSchema = z.object({
   ISBN: z.string().min(2).max(32),
   title: z.string().min(2).max(180),
