@@ -2,7 +2,7 @@ import axios from "axios";
 import { clearAccessToken, getAccessToken, saveAccessToken } from "../shared/utils/token-storage";
 import { extractErrorMessage } from "../shared/utils/response";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api/v1";
 
 const http = axios.create({
   baseURL: API_BASE_URL,

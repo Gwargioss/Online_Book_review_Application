@@ -1,8 +1,9 @@
 import express from "express";
+import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import swaggerUi from "swagger-ui-express"; 
+import swaggerUi from "swagger-ui-express";
 import routes from "./routes/index.js";
 import { applySecurityMiddleware } from "./middleware/security.js";
 import { notFound } from "./middleware/not-found.js";
@@ -17,26 +18,25 @@ const swaggerDocument = JSON.parse(fs.readFileSync(swaggerFilePath, "utf8"));
 export function createApp() {
   const app = express();
 
-  // apply security middleware
+  app.use(cors());
+
+
   applySecurityMiddleware(app);
 
-  // Limit for text in req Body to protect me from large payloads
   app.use(express.json({ limit: "64kb" }));
   app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
 
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-  // home route
   app.get("/", function (req, res) {
     res.status(200).send(
-      "<h1>BookVerse API</h1>" +
-      "<p>Online Book Review API</p>" +
-      "<p>API base: <code>/api/v1</code></p>" +
-      "<p>API Documentation: <a href='/api-docs'>/api-docs</a></p>" // 
+        "<h1>BookVerse API</h1>" +
+        "<p>Online Book Review API</p>" +
+        "<p>API base: <code>/api/v1</code></p>" +
+        "<p>API Documentation: <a href='/api-docs'>/api-docs</a></p>"
     );
   });
 
-  // api routes
   app.use("/api/v1", routes);
 
   app.use(notFound);

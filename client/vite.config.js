@@ -5,6 +5,12 @@ export default defineConfig({
     jsx: "automatic"
   },
   server: {
-    port: 5173
+    port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      }
+    }
   }
 });
