@@ -3,7 +3,7 @@ import { asyncHandler } from "../middleware/async-handler.js";
 import { requireAuth } from "../middleware/require-auth.js";
 import { validate } from "../middleware/validate.js";
 import * as reviewController from "../controllers/review-controller.js";
-import { bookIdParams, upsertReviewSchema } from "../validators/review-validators.js";
+import { bookIdParams, createReviewSchema, reviewIdParams } from "../validators/review-validators.js";
 
 const router = Router();
 
@@ -11,13 +11,13 @@ router.get("/books/:id/reviews", validate({ params: bookIdParams }), asyncHandle
 router.put(
   "/books/:id/reviews",
   requireAuth,
-  validate({ params: bookIdParams, body: upsertReviewSchema }),
-  asyncHandler(reviewController.upsert)
+  validate({ params: bookIdParams, body: createReviewSchema }),
+  asyncHandler(reviewController.create)
 );
 router.delete(
-  "/books/:id/reviews",
+  "/books/:id/reviews/:reviewId",
   requireAuth,
-  validate({ params: bookIdParams }),
+  validate({ params: reviewIdParams }),
   asyncHandler(reviewController.remove)
 );
 

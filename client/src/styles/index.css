@@ -121,6 +121,26 @@ a {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.btn-danger {
+  color: #fff;
+  background: linear-gradient(130deg, #ff5f6d, #d62828);
+}
+
+.btn-sm {
+  padding: 0.45rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.btn-xs {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.btn-icon {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+}
+
 .page {
   display: grid;
   gap: 1.1rem;
@@ -183,7 +203,8 @@ a {
 
 .course-card__top {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .course-tag {
@@ -229,6 +250,19 @@ a {
 
 .review-item {
   padding: 0.8rem;
+}
+
+.review-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.review-rating {
+  font-size: 0.85rem;
+  color: var(--muted);
 }
 
 .review-form {

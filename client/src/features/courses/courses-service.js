@@ -20,3 +20,8 @@ export async function publishCourse(coursePayload) {
   const res = await http.post("/books", coursePayload);
   return normalizeApiResponse(res.data);
 }
+
+export async function removeCourse(bookId) {
+  const res = await http.delete(`/books/${bookId}`);
+  return normalizeApiResponse(res.data);
+}

@@ -8,7 +8,7 @@ export async function list(req, res) {
 }
 // Create
 export async function publish(req, res) {
-  const result = await bookService.publishBook(req.body);
+  const result = await bookService.publishBook({ ...req.body, publisherId: req.auth.userId });
   return ok(res, result, undefined, 201);
 }
 // Search by ISBN
@@ -25,4 +25,10 @@ export async function byTitle(req, res) {
 export async function byAuthor(req, res) {
   const result = await bookService.searchByAuthor(req.body);
   return ok(res, { foundBooks: result.items });
+}
+
+// Delete
+export async function remove(req, res) {
+  const result = await bookService.deleteBook({ bookId: req.params.id, userId: req.auth.userId });
+  return ok(res, result);
 }

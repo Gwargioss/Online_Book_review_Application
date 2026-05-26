@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { CourseCard } from "../components/course-card";
-import { getAllCourses } from "../courses-service";
+import { getAllCourses, removeCourse } from "../courses-service";
 import { Spinner } from "../../../shared/components/ui/spinner";
+import { useAuth } from "../../auth/auth-context";
 
 export default function HomePage() {
+  const { user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -41,6 +43,18 @@ export default function HomePage() {
     );
   }, [query, courses]);
 
+  const deleteBook = async (course) => {
+    if (!course?.id) return;
+    if (!window.confirm(`Delete "${course.title}"? This action cannot be undone.`)) return;
+    try {
+      const response = await removeCourse(course.id);
+      if (!response.success) throw new Error(response.message || "Book delete failed.");
+      setCourses((prev) => prev.filter((item) => item.id !== course.id));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <section className="page">
       <div className="hero glass">
@@ -69,7 +83,15 @@ export default function HomePage() {
       {error && <p className="error-text">{error}</p>}
 
       <div className="course-grid">
-        {!loading && filtered.map((course) => <CourseCard key={course.id} course={course} />)}
+        {!loading &&
+          filtered.map((course) => (
+            <CourseCard
+              key={course.id}
+              course={course}
+              canDelete={user?.id && course.publisherId === user.id}
+              onDelete={deleteBook}
+            />
+          ))}
       </div>
     </section>
   );

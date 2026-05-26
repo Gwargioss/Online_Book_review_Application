@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
-import { getAllCourses } from "../courses-service";
-import { getBookReviews, removeBookReview, upsertBookReview } from "../../reviews/reviews-service";
+import { useNavigate, useParams } from "react-router-dom";
+import { getAllCourses, removeCourse } from "../courses-service";
+import { getBookReviews, createBookReview, removeBookReview } from "../../reviews/reviews-service";
 import { ReviewList } from "../../reviews/components/review-list";
 import { useAuth } from "../../auth/auth-context";
 
 export default function CourseDetailsPage() {
   const { bookId } = useParams();
-  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
   const [courses, setCourses] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(4);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -36,25 +38,40 @@ export default function CourseDetailsPage() {
   }, [bookId]);
 
   const course = useMemo(() => courses.find((item) => item.id === bookId), [courses, bookId]);
+  const canDeleteBook = user?.id && course?.publisherId === user.id;
 
   const submitReview = async (event) => {
     event.preventDefault();
     try {
-      const response = await upsertBookReview(bookId, reviewText);
+      const response = await createBookReview(bookId, reviewText, reviewRating);
       if (!response.success) throw new Error(response.message || "Review update failed.");
       const latest = await getBookReviews(bookId);
       setReviews(Array.isArray(latest.data) ? latest.data : []);
       setReviewText("");
+      setReviewRating(4);
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const deleteReview = async () => {
+  const deleteReview = async (review) => {
+    if (!review?.id) return;
     try {
-      await removeBookReview(bookId);
+      await removeBookReview(bookId, review.id);
       const latest = await getBookReviews(bookId);
       setReviews(Array.isArray(latest.data) ? latest.data : []);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const deleteBook = async () => {
+    if (!canDeleteBook) return;
+    if (!window.confirm("Delete this book? This action cannot be undone.")) return;
+    try {
+      const response = await removeCourse(bookId);
+      if (!response.success) throw new Error(response.message || "Book delete failed.");
+      navigate("/");
     } catch (err) {
       setError(err.message);
     }
@@ -70,13 +87,33 @@ export default function CourseDetailsPage() {
         <h1>{course.title}</h1>
         <p className="muted">Author: {course.author}</p>
         <p className="muted">ISBN: {course.ISBN}</p>
+        {canDeleteBook && (
+          <button type="button" className="btn btn-danger btn-sm" onClick={deleteBook}>
+            Delete Book
+          </button>
+        )}
       </article>
 
       <article className="details-card glass">
         <h2>Learner Reviews</h2>
-        <ReviewList reviews={reviews} />
+        <ReviewList reviews={reviews} currentUserId={user?.id} onDelete={deleteReview} />
         {isAuthenticated && (
           <form className="review-form" onSubmit={submitReview}>
+            <label className="muted" htmlFor="review-rating">
+              Rating (0-4)
+            </label>
+            <select
+              id="review-rating"
+              className="input"
+              value={reviewRating}
+              onChange={(event) => setReviewRating(Number(event.target.value))}
+            >
+              {[0, 1, 2, 3, 4].map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
             <textarea
               className="input"
               rows={4}
@@ -87,9 +124,6 @@ export default function CourseDetailsPage() {
             />
             <div className="inline-actions">
               <button className="btn btn-primary">Submit Review</button>
-              <button type="button" className="btn btn-ghost" onClick={deleteReview}>
-                Delete My Review
-              </button>
             </div>
           </form>
         )}

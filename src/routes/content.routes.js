@@ -52,7 +52,7 @@ router.post(
         });
       }
 
-      const book = await bookService.updateBookContent(bookId, content);
+      const book = await bookService.updateBookContent(bookId, content, req.auth.userId);
       return ok(res, book);
     } catch (err) {
       next(err);
