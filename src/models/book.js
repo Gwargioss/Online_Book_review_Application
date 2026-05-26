@@ -25,7 +25,6 @@ const bookSchema = new mongoose.Schema(
     publisherId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
       index: true
     },
     content: {

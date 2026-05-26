@@ -16,6 +16,9 @@ export async function listBooks({ page = 1, limit = 24 }) {
 }
 
 export async function publishBook({ ISBN, title, author, content = "", publisherId }) {
+  if (!publisherId) {
+    throw new AppError({ code: "UNAUTHORIZED", status: 401, message: "Authentication required." });
+  }
   try {
     const book = await bookRepo.createBook({ ISBN, title, author, content, publisherId });
     return { book };

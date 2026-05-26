@@ -4,7 +4,7 @@ const reviewSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true, index: true },
-    rating: { type: Number, required: true, min: 0, max: 4 },
+    rating: { type: Number, min: 0, max: 4, default: 0 },
     review_text: { type: String, required: true, trim: true, maxlength: 2000 }
   },
   {
